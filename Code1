@@ -1,0 +1,49 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score, classification_report
+
+# get data files
+!wget https://cdn.freecodecamp.org/project-data/sms/train-data.tsv
+!wget https://cdn.freecodecamp.org/project-data/sms/valid-data.tsv
+
+train_file_path = "train-data.tsv"
+test_file_path = "valid-data.tsv"
+print(test_file_path)
+print(train_file_path)
+
+# Create a pipeline that preprocesses the data, extracts features, and then applies a classifier
+model = Pipeline([
+    ('tfidf', TfidfVectorizer(stop_words='english')),
+    ('clf', MultinomialNB())
+])
+
+#Extract the features (X) and labels (y) from the training data
+X_train = train_file_path['message']
+y_train = train_file_path['label']
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Extract the features (X) and labels (y) from the test data
+X_test = test_file_path['message']
+y_test = test_file_path['label']
+
+# Predict the labels for the test data
+y_pred = model.predict(X_test)
+
+# Print evaluation metrics
+print(f'Accuracy: {accuracy_score(y_test, y_pred)}')
+print(classification_report(y_test, y_pred))
+
+# Define the prediction function
+def predict_message(message):
+    prediction = model.predict([message])[0]
+    probability = model.predict_proba([message])[0]
+    spam_prob = probability[1]
+    return [spam_prob, 'spam' if prediction == 'spam' else 'ham']
+
+# Test the function with an example message
+print(predict_message("Congratulations! You've won a free ticket to Bahamas. Text WIN to 12345 now!"))
